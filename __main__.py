@@ -20,15 +20,15 @@ def set_unix_environment_variables(dictionary_vars):
     bashrc_content = get_bashrc_content()
     with open(get_bashrc_path(), 'a') as file:
         [file.write("export " + key + "=" + dictionary_vars[key] + "\n") for key in dictionary_vars.keys()
-         if ("export " + key + "=" + dictionary_vars[key]) not in ''.join(bashrc_content)]
+         if ("export " + key + "=") not in ''.join(bashrc_content)]
     print('Please run command "source ~/.bashrc" to take new environment variable into account')
 
 
 def unset_unix_environment_variable(dictionary_vars):
     bashrc_content = get_bashrc_content()
-    forbidden_lines = ["export " + key + "=" + dictionary_vars[key] + "\n" for key in dictionary_vars]
+    forbidden_lines = ["export " + key + "=" for key in dictionary_vars]
     with open(get_bashrc_path() + '_current', 'w') as file:
-        [file.write(line) for line in bashrc_content if line not in forbidden_lines]
+        [file.write(line) for line in bashrc_content if line.split("=")[0] not in ''.join(forbidden_lines)]
     system('mv -f ' + get_bashrc_path() + '_current' + ' ' + get_bashrc_path())
     system('env -i bash')
 
@@ -39,14 +39,16 @@ def get_user_inputs():
                                      description='Script which set or unset environment variables')
     parser.add_argument('mode', help='set to add variable. unset to remove them', type=str)
     parser.add_argument('variable_list', help='list of variable (, separator)', type=str)
-    parser.add_argument('value_list', help='list of value (, separator)', type=str)
+    parser.add_argument('--value_list', help='list of value (, separator)', type=str)
     return parser.parse_args()
 
 
 def main(argv):
     user_inputs = get_user_inputs()
     mode = user_inputs.mode
-    variable_dictionnary = dict(zip(user_inputs.variable_list.split(','), user_inputs.value_list.split(',')))
+    variable_dictionnary = dict(zip(user_inputs.variable_list.split(','), user_inputs.value_list.split(','))) \
+        if user_inputs.value_list is not None \
+        else dict(zip(user_inputs.variable_list.split(','), ['' for element in user_inputs.variable_list.split(',')]))
     if mode == "set":
         set_unix_environment_variables(variable_dictionnary)
     elif mode == "unset":
