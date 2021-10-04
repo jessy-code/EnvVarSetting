@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from getpass import getuser
 from os import system
 import sys
@@ -21,16 +23,22 @@ def set_unix_environment_variables(dictionary_vars):
     with open(get_bashrc_path(), 'a') as file:
         [file.write("export " + key + "=" + dictionary_vars[key] + "\n") for key in dictionary_vars.keys()
          if ("export " + key + "=") not in ''.join(bashrc_content)]
-    print('Please run command "source ~/.bashrc" to take new environment variable into account')
+    with open('setting.sh', 'w') as file:
+        file.write("#!/bin/bash\n")
+        [file.write("export " + key + "=" + dictionary_vars[key] + "\n") for key in dictionary_vars.keys()]
+    print("Run setting.sh script to take modification into account")
 
 
 def unset_unix_environment_variable(dictionary_vars):
     bashrc_content = get_bashrc_content()
-    forbidden_lines = ["export " + key + "=" for key in dictionary_vars]
+    forbidden_lines = ["export " + key + "=" for key in dictionary_vars.keys()]
     with open(get_bashrc_path() + '_current', 'w') as file:
         [file.write(line) for line in bashrc_content if line.split("=")[0] not in ''.join(forbidden_lines)]
+    with open('setting.sh', 'w') as file:
+        file.write("#!/bin/bash\n")
+        [file.write("unset " + key + "\n") for key in dictionary_vars.keys()]
     system('mv -f ' + get_bashrc_path() + '_current' + ' ' + get_bashrc_path())
-    system('env -i bash')
+    print("Run setting.sh script to take modification into account")
 
 
 def get_user_inputs():
