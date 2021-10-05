@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-
+import os
 from getpass import getuser
 from os import system
+from os.path import isfile
 import sys
 import argparse
 
@@ -20,9 +21,14 @@ def get_bashrc_content():
 
 def set_unix_environment_variables(dictionary_vars):
     bashrc_content = get_bashrc_content()
+
     with open(get_bashrc_path(), 'a') as file:
         [file.write("export " + key + "=" + dictionary_vars[key] + "\n") for key in dictionary_vars.keys()
          if ("export " + key + "=") not in ''.join(bashrc_content)]
+
+    if isfile('setting.sh'):
+       os.system('rm setting.sh')
+
     with open('setting.sh', 'w') as file:
         file.write("#!/bin/bash\n")
         [file.write("export " + key + "=" + dictionary_vars[key] + "\n") for key in dictionary_vars.keys()]
@@ -32,8 +38,13 @@ def set_unix_environment_variables(dictionary_vars):
 def unset_unix_environment_variable(dictionary_vars):
     bashrc_content = get_bashrc_content()
     forbidden_lines = ["export " + key + "=" for key in dictionary_vars.keys()]
+
     with open(get_bashrc_path() + '_current', 'w') as file:
         [file.write(line) for line in bashrc_content if line.split("=")[0] not in ''.join(forbidden_lines)]
+
+    if not isfile('setting.sh'):
+        os.system('rm setting.sh')
+
     with open('setting.sh', 'w') as file:
         file.write("#!/bin/bash\n")
         [file.write("unset " + key + "\n") for key in dictionary_vars.keys()]
@@ -63,8 +74,6 @@ def main(argv):
         unset_unix_environment_variable(variable_dictionnary)
     else:
         print("Incorrect mode value. Run python3 testEnvVarSetting -h to check the available modes.")
-
-    pass
 
 
 if __name__ == '__main__':
